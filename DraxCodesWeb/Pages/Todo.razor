@@ -1,31 +1,53 @@
 ﻿@page "/todo"
 @using DraxCodesWeb.Services.Entities
+@using DraxCodesWeb.Services
+@inject TodoJsonStorage TodoStorage
+@inject  HttpClient Http
 
 <h1>Todo (@todos.Count(todo => !todo.IsDone))</h1>
 
 <ul>
     @foreach (var todo in todos)
     {
-        <li>
+    <li>
+        <p>
             <input type="checkbox" bind="@todo.IsDone" />
-            <input bind="@todo.Title" />
-        </li>
+            @todo.Title
+        </p>
+    </li>
     }
 </ul>
 
 <input placeholder="Something todo" bind="newTodo"/>
 <button onclick="@AddTodo">Add todo</button>
 
-@functions {
-    private IList<TodoItem> todos = new List<TodoItem>();
+@functions {      
+
+    private List<TodoItem> todos = new List<TodoItem>();
     private string newTodo;
 
-    private void AddTodo()
+    protected override async Task OnInitAsync()
     {
+        var todoItems = await Http.GetJsonAsync<List<TodoItem>>("sample-data/todo.json");
+        if (todoItems != null)
+        {
+            todos = todoItems;
+        }
+    }
+
+    private async Task AddTodo()
+    {
+        var todoItem = new TodoItem
+        {
+            Title = newTodo,
+            IsDone = false
+        };
+
         if (!string.IsNullOrWhiteSpace(newTodo))
         {
-            todos.Add(new TodoItem { Title = newTodo });
-            newTodo = string.Empty;
+            todos.Add(todoItem);
+            var json = TodoStorage.ConvertJson(todos);
+            await Http.PutJsonAsync("sample-data/todo.json", json);
         }
     }
 }
