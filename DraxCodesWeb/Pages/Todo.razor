@@ -47,7 +47,7 @@
         {
             todos.Add(todoItem);
             var json = TodoStorage.ConvertJson(todos);
-            await Http.PutJsonAsync("sample-data/todo.json", json);
+            await Http.PostJsonAsync("sample-data/todo.json", json);
         }
     }
 }
